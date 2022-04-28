@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "shared.proto";
+
+service CowboyService {
+    rpc getCowboy(Void) returns (Cowboy) {}
+    rpc setCowboy(Cowboy) returns (Response) {}
+    rpc setTargetCowboys(TargetCowboys) returns (Response) {}
+    rpc giveDamage(Void) returns (Response) {}
+    rpc takeDamage(Shooter) returns (Response) {}
+}
+
+message Response {
+    string statusCode = 1;
+}
+
+message Cowboy {
+    string name = 1;
+    int32 health = 2;
+    int32 damage = 3;
+}
+
+message Shooter {
+    string name = 1;
+    int32 damage = 2;
+}
+
+message TargetCowboy {
+    string serviceAddress = 1;
+    string cowboyName = 2;
+}
+
+message TargetCowboys {
+    repeated TargetCowboy target = 1;
+}

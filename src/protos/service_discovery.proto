@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "shared.proto";
+
+service ServiceDiscoveryService {
+    rpc getRegistered(Void) returns (ServiceNodes) {}
+    rpc register(ServiceNode) returns (Void) {}
+    rpc clearRegistered(Void) returns (Void) {}
+}
+
+message ServiceNode {
+    string serviceName = 1;
+    string ip = 2;
+    string port = 3;
+}
+
+message ServiceNodes {
+    repeated ServiceNode serviceNode = 1;
+}

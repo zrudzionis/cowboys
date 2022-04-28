@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+  service-discovery:
+    build:
+      context: .
+      dockerfile: service-discovery-Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - shared-network
+  cowboy:
+    build:
+      context: .
+      dockerfile: cowboy-Dockerfile
+    ports:
+      - "8000"
+    volumes:
+      - "./containers_data:/home/containers_data"
+    networks:
+      - shared-network
+    depends_on:
+      - service-discovery
+
+networks:
+  shared-network:
+    name: SharedNetwork
+    driver: bridge
