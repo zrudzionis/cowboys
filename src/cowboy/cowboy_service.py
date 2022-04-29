@@ -1,4 +1,3 @@
-import json
 import logging
 import random
 import socket
@@ -9,7 +8,6 @@ from src import constants
 from src.constants import CowboyStatusCodes
 from src.generated.cowboy_pb2_grpc import CowboyServiceServicer
 from src.cowboy.cowboy_service_client import CowboyServiceClient
-from src.service_discovery import service_discovery_client
 from src.generated.cowboy_pb2 import (
     Cowboy,
     Response
@@ -20,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
 
-class CowboyServiceServicer(CowboyServiceServicer):
+class CowboyService(CowboyServiceServicer):
     """
     It is possible for two cowboys to shoot each other at the same time.
     It is not possible for one cowboy to be shot by two cowboys.
@@ -30,7 +28,7 @@ class CowboyServiceServicer(CowboyServiceServicer):
 
     target_cowboys = None
 
-    def __init__(self) -> None:
+    def __init__(self, service_discovery_client) -> None:
         super().__init__()
         service_discovery_client.register(
             service_address=constants.SERVICE_DISCOVERY_INTERNAL_ADDRESS,
@@ -39,24 +37,24 @@ class CowboyServiceServicer(CowboyServiceServicer):
             port=str(constants.COWBOY_SERVER_PORT)
         )
 
-    def getCowboy(self, _, __):
+    def getCowboy(self, _, __=None) -> Optional[Cowboy]:
         LOGGER.info("getCowboy was called")
         if self.me is None:
             return
         else:
             return self.me
 
-    def setCowboy(self, request, _):
+    def setCowboy(self, request, _=None) -> Response:
         LOGGER.info("setCowboy was called with: '%s'", request)
         self.me = request
         return _get_success_response()
 
-    def setTargetCowboys(self, request, _):
+    def setTargetCowboys(self, request, _=None) -> Response:
         LOGGER.info("initTargetCowboys called with: '%s'", request.target)
         self.target_cowboys = request.target
         return _get_success_response()
 
-    def takeDamage(self, request, _):
+    def takeDamage(self, request, _=None) -> Response:
         """
         Method to take damage from another cowboy
         """
@@ -85,7 +83,7 @@ class CowboyServiceServicer(CowboyServiceServicer):
 
             return _get_response(status_code)
 
-    def giveDamage(self, _, __):
+    def giveDamage(self, _, __=None) -> Response:
         """
         Method to give damage to another cowboy
         """
@@ -113,7 +111,7 @@ class CowboyServiceServicer(CowboyServiceServicer):
 
         return self._handle_cowboy_take_damage_response(target, status_code)
 
-    def _handle_cowboy_take_damage_response(self, target, status_code):
+    def _handle_cowboy_take_damage_response(self, target, status_code) -> str:
         return_status_code = None
         if status_code == CowboyStatusCodes.SUCCESS_CODE:
             LOGGER.info(
@@ -146,7 +144,7 @@ class CowboyServiceServicer(CowboyServiceServicer):
         else:
             return random.choice(self.target_cowboys)
 
-    def _remove_target(self, target_name: str):
+    def _remove_target(self, target_name: str) -> None:
         LOGGER.info("%s removing %s from targets", self.me.name, target_name)
         self.target_cowboys = [
             cowboy

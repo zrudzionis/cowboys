@@ -17,3 +17,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+
+# VS code internal dir
+.vscode/
