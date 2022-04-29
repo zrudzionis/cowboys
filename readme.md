@@ -1,5 +1,71 @@
 ## Cowboys
 
+## Thoughts on possible solutions
+
+There are many ways to approach this problem.
+I will describe couple of them briefly.
+
+### Cowboy to cowboy and arbiter observing (implemented)
+
+Is based on p2p communication between cowboys.
+From time to time arbiter looks at the current state of cowboys and
+report who is alive. Last man that is alive wins. One drawback
+of this appraoch is that it is possible to have no winner at the end
+of the shootout meaning that last cowboys shoot each other.
+* Pros:
+    * No single point of failure
+    * Scalable
+* Cons:
+    * More complex
+    * 0 or 1 surviving cowboy
+
+### Cowboy to arbiter
+
+We can have cowboys talking to arbiter.
+Cowboys would send information who they chose to shoot.
+Arbiter would aquire two locks.
+One on shooting cowboy's health and
+one on cowboy's that is being shot health.
+* Pros:
+    * 1 surviving cowboy
+* Cons:
+    * Single point of failure
+    * Arbiter is only vertically scalable
+
+### Cowboy to queue to arbiter
+
+Cowboys choose who they want to shoot
+and push their selection to queue.
+Arbiter is reading the queue and interpreting the messages.
+Dead cowboy messages are dropped.
+Messages to shoot dead cowboys are dropped.
+Messages are interpreted in order of earliest creation time first.
+* Pros:
+    * Scalable
+* Cons:
+    * Cowboy can shoot a dead cowboy
+
+### Cowboy to queue to arbiter that is reinterpreting
+
+Cowboys know how many other cowboys (n) there are.
+Cowboy chooses a number (1..n) that he wants to shoot
+and pushes this number to queue.
+Arbiter is reading the queue and interpreting the messages.
+Dead cowboy messages are dropped.
+When arbiter receives a message of cowboy shooting someone
+he takes number of currently alive cowboys (excluding shooter).
+Let's call this number m. Arbiter calculates a new value
+n mod m.
+Calculated value will be point to cowboys that must be shot.
+
+* Pros:
+    * Scalable
+* Cons:
+    * Business logic leaks across multiple services
+
+
+## Setup
+
 ### Quickstart
 
 `cowboys.json` contains a list of cowboys.
